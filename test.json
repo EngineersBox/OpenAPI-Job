@@ -1,0 +1,229 @@
+{
+	"openapi": "3.0.0",
+	"info": {
+		"description": "Billing Data Service's API",
+		"version": "1.0.0",
+		"title": "Billing Data Service"
+	},
+	"servers": [{
+		"url": "http://localhost:8094"
+	}],
+	"tags": [{
+		"name": "BillingDataServiceClient",
+		"description": "getPrices\ngetNodeTypes\ngetAccounts\n"
+	}],
+	"paths": {
+		"/billing/v1/price/": {
+			"get": {
+				"tags": [
+					"PriceServiceClient"
+				],
+				"description": "Get a collection of all standard prices.",
+				"operationId": "getPrices",
+				"parameters": [{
+						"name": "meterFrom",
+						"in": "query",
+						"description": "start time to retrieve prices from",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"format": "date-time"
+						}
+					},
+					{
+						"name": "meterTo",
+						"in": "query",
+						"description": "end time to retrieve prices to",
+						"required": true,
+						"schema": {
+							"type": "string",
+							"format": "date-time"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Prices retrieved",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"$ref": "#/components/schemas/Prices"
+								}
+							}
+						}
+					}
+				}
+			}
+		},
+		"/billing/v1/nodeType/": {
+			"get": {
+				"tags": [
+					"NodeTypeServiceClient"
+				],
+				"description": "Get all node types in the DB",
+				"operationId": "getNodeTypes",
+				"responses": {
+					"200": {
+						"description": "nodeTypes found",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/NodeType"
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	},
+	"components": {
+		"schemas": {
+			"Prices": {
+				"type": "object",
+				"properties": {
+					"addOnRates": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/AddonRate"
+						}
+					},
+					"nodePrices": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/NodePrice"
+						}
+					},
+					"riyoaNodeManagementUnits": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/RiyoaNodeManagementUnit"
+						}
+					},
+					"riyoaTieredUnitRates": {
+						"type": "array",
+						"items": {
+							"$ref": "#/components/schemas/RiyoaTieredUnitRate"
+						}
+					}
+				}
+			},
+			"RiyoaNodeManagementUnit": {
+				"type": "object",
+				"required": [
+					"nodeType",
+					"managementUnits",
+					"primaryBundle",
+					"slaTier"
+				],
+				"properties": {
+					"nodeType": {
+						"$ref": "#/components/schemas/NodeType"
+					},
+					"managementUnits": {
+						"type": "number",
+						"format": "double"
+					},
+					"primaryBundle": {
+						"$ref": "#/components/schemas/PrimaryBundle"
+					},
+					"slaTier": {
+						"$ref": "../../../../common/src/main/resources/openapi/common-openapi-spec.yaml#/components/schemas/ServiceLevelAgreementTier"
+					}
+				}
+			},
+			"RiyoaTieredUnitRate": {
+				"type": "object",
+				"required": [
+					"fromUnits",
+					"unitRate"
+				],
+				"properties": {
+					"fromUnits": {
+						"type": "integer",
+						"format": "int32"
+					},
+					"toUnits": {
+						"type": "integer",
+						"format": "int32"
+					},
+					"unitRate": {
+						"type": "integer",
+						"format": "int32"
+					}
+				}
+			},
+			"NodePrice": {
+				"type": "object",
+				"required": [
+					"nodeType"
+				],
+				"properties": {
+					"nodeType": {
+						"$ref": "#/components/schemas/NodeType"
+					},
+					"monthlyPrice": {
+						"type": "integer",
+						"format": "int32"
+					},
+					"monthlyCost": {
+						"type": "integer",
+						"format": "int32"
+					},
+					"includedNodeMonth": {
+						"type": "integer",
+						"format": "int32"
+					}
+				}
+			},
+			"NodeType": {
+				"type": "object",
+				"required": [
+					"name",
+					"provider",
+					"dataCentre"
+				],
+				"properties": {
+					"name": {
+						"type": "string",
+						"format": "string"
+					},
+					"provider": {
+						"$ref": "../../../../common/src/main/resources/openapi/common-openapi-spec.yaml#/components/schemas/Provider"
+					},
+					"dataCentre": {
+						"type": "string",
+						"format": "string"
+					}
+				}
+			},
+			"AddonRate": {
+				"type": "object",
+				"required": [
+					"addonType",
+					"upliftRate"
+				],
+				"properties": {
+					"addonType": {
+						"$ref": "../../../../common/src/main/resources/openapi/common-openapi-spec.yaml#/components/schemas/AddonType"
+					},
+					"upliftRate": {
+						"type": "integer",
+						"format": "int32"
+					}
+				}
+			},
+			"PrimaryBundle": {
+				"type": "string",
+				"enum": [
+					"CASSANDRA",
+					"KAFKA"
+				]
+			}
+		}
+	}
+}

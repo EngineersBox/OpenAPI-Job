@@ -1,0 +1,25 @@
+{
+  "name": "openapi-job",
+  "version": "1.0.0",
+  "description": "Processing of OpenAPI specification pre-deployment",
+  "main": "parse.js",
+  "scripts": {
+    "test": "test",
+    "add-examples": "node parse.js raw-spec.json specification.json",
+    "verify-raw-spec": "swagger-cli validate raw-spec.json",
+    "verify-final-spec": "swagger-cli validate specification.json",
+    "get-spec": "rm -rf raw-spec.json && curl \"http://petstore.swagger.io/v2/swagger.json\" > raw-spec.json",
+    "process-spec": "npm run get-spec && npm run verify-raw-spec && npm run add-examples && npm run verify-final-spec"
+  },
+  "author": "Base: Andrzej WP, Expansion + running scripts: Jack Kilrain",
+  "license": "MIT",
+  "dependencies": {
+    "cli-color": "^2.0.0",
+    "js-yaml": "^3.13.1",
+    "jshint": "^2.11.0",
+    "mkdirp": "^0.5.0",
+    "mkdirp-promise": "^1.1.0",
+    "openapi-snippet": "andrzejwp/swagger-snippet#patch-2",
+    "swagger-cli": "^3.0.1"
+  }
+}
