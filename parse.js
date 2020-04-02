@@ -46,8 +46,16 @@ const validTargets = [
 	'swift_nsurlsession',
 ];
 
-// Language snippet targets
-let targets = ['php_curl', 'javascript_xhr', 'java_okhttp', 'python_requests', 'python_python3', 'go_native', 'shell_curl'];
+// Default language snippet targets
+let targets = [
+	'php_curl',
+	'javascript_xhr',
+	'java_okhttp',
+	'python_requests',
+	'python_python3',
+	'go_native',
+	'shell_curl'
+];
 
 /**
  * Adds specified targets to schema, returning ammended schema
@@ -57,13 +65,16 @@ let targets = ['php_curl', 'javascript_xhr', 'java_okhttp', 'python_requests', '
  */
 function enrichSchema(schema) {
 	for (var path in schema.paths) {
-
 		for (var method in schema.paths[path]) {
 			var generatedCode = OpenAPISnippet.getEndpointSnippets(schema, path, method, targets);
-			schema.paths[path][method]["x-code-samples"] = [];
+			if (!schema.paths[path][method]["x-code-samples"])
+				schema.paths[path][method]["x-code-samples"] = [];
 			for (var snippetIdx in generatedCode.snippets) {
 				var snippet = generatedCode.snippets[snippetIdx];
-				schema.paths[path][method]["x-code-samples"][snippetIdx] = { "lang": snippet.title, "source": snippet.content };
+				if (!schema.paths[path][method]["x-code-samples"][snippetIdx])
+					schema.paths[path][method]["x-code-samples"][snippetIdx] = { "lang": snippet.title, "source": snippet.content };
+				else
+					warning("Field '" + snippet.title + "' already exists in '" + path + "' path, skipping.");
 			}
 
 		}
