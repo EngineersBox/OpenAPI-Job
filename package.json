@@ -5,10 +5,10 @@
   "main": "parse.js",
   "scripts": {
     "test": "test",
-    "add-examples": "rm -rf specification.json && node parse.js raw-spec.json specification.json",
+    "add-examples": "rm -rf specification.json && node parse.js raw-spec.json specification.json default -v",
     "verify-raw-spec": "swagger-cli validate raw-spec.json",
     "verify-final-spec": "swagger-cli validate specification.json",
-    "get-spec": "rm -rf raw-spec.json && curl \"http://petstore.swagger.io/v2/swagger.json\" > raw-spec.json",
+    "get-spec": "rm -rf raw-spec.json && curl $SPECURL > raw-spec.json",
     "remove-specs": "rm -rf raw-spec.json && rm -rf specification.json",
     "process-spec": "npm run get-spec && npm run verify-raw-spec && npm run add-examples && npm run verify-final-spec"
   },
