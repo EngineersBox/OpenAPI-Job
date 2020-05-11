@@ -147,17 +147,17 @@ if (process.argv[3].indexOf('json') == -1) {
 	process.exit(1);
 }
 
-const specPath = "./specification.json";
+const specPath = process.argv[3];
 
 // If specification.json exists, remove it, otherwise continue
 try {
 	progress("Checking if specification.json exists");
-	if (fs.existsSync(specPath)) {
-		progress("specification.json exists, removing...", 1);
-		fs.unlinkSync(specPath);
-		complete("specification.json removed", 1);
+	if (fs.existsSync("./" + specPath)) {
+		progress(process.argv[3] + " exists, removing...", 1);
+		fs.unlinkSync("./" + specPath);
+		complete(process.argv[3] + " removed", 1);
 	} else {
-		complete("specification.json does not exist, continuing", 1);
+		complete(process.argv[3] + " does not exist, continuing", 1);
 	}
 } catch(err) {
 	error(err);
