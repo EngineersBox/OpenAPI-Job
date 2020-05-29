@@ -7,8 +7,8 @@
     "test": "test",
     "add-examples": "rm -rf $FINAL_SPEC_FILE_NAME && node parse.js $RAW_SPEC_FILE_NAME $FINAL_SPEC_FILE_NAME $CODE_TARGETS -v",
     "verify-raw-spec": "swagger-cli validate $RAW_SPEC_FILE_NAME",
-    "verify-final-spec": "echo $FINAL_SPEC_FILE_NAME > swagger-cli validate",
-    "get-spec": "rm -rf $RAW_SPEC_FILE_NAME && curl http://petstore.swagger.io/v2/swagger.json > $RAW_SPEC_FILE_NAME",
+    "verify-final-spec": "npx swagger-cli validate $FINAL_SPEC_FILE_NAME",
+    "get-spec": "rm -rf $RAW_SPEC_FILE_NAME && curl $SPECURL > $RAW_SPEC_FILE_NAME",
     "remove-specs": "rm -rf $RAW_SPEC_FILE_NAME && rm -rf $FINAL_SPEC_FILE_NAME",
     "process-spec": "npm run get-spec && npm run verify-raw-spec && npm run add-examples && npm run verify-final-spec"
   },
@@ -17,11 +17,12 @@
   "dependencies": {
     "cli-color": "^2.0.0",
     "js-yaml": "^3.13.1",
-    "jshint": "^2.11.0",
     "mkdirp": "^0.5.0",
     "mkdirp-promise": "^1.1.0",
     "openapi-snippet": "andrzejwp/swagger-snippet#patch-2",
     "swagger-cli": "^3.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.1.0"
   }
-  
 }

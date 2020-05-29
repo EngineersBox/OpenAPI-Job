@@ -17,14 +17,15 @@
  * ---- CLI arguments ----
  * @argument argv[0]: Raw specification file name (JSON or YAML)
  * @argument argv[1]: Final specification file name (JSON or YAML)
- * @argument argv[3:n]: Languages to use for client code snippets
+ * @argument argv[2:n]: Languages to use for client code snippets
  *
- * @default {Targets} argv[3:n]: Client code languages
+ * @default {Targets} argv[2:n]: Client code languages
  *
  * ---- CLI flags (options) ----
  * @argument argv[n:n+1]: -v (--verbose): Whether to use verbose logging statements
  *
  * @author Jack Kilrain
+ * @author Andrzej WP
  */
 
 const fs = require('fs');
@@ -33,26 +34,7 @@ const yaml = require('js-yaml');
 const clc = require('cli-color');
 
 let isVerbose = false;
-
-function generateTreeLines(nest) {
-	return nest > 0 ? "|" + " |".repeat(Math.max(0, nest - 1)) + "-->" : "";
-}
-
-const error = function (msg, nest = 0) {
-	console.log(generateTreeLines(nest) + "[" + clc.bgRed.white.bold("Error!") + "]", msg);
-};
-const warning = function (msg, nest = 0) {
-	console.log(generateTreeLines(nest) + "[" + clc.bgYellow.white.bold("Warning") + "]", msg);
-};
-const progress = function (msg, nest = 0) {
-	console.log(generateTreeLines(nest) + "[" + clc.bgBlue.white.bold("Info") + "]", msg);
-};
-const complete = function (msg, nest = 0) {
-	console.log(generateTreeLines(nest) + "[" + clc.bgGreen.white.bold("Completed") + "]", msg);
-};
-const usage = function (msg, nest = 0) {
-	console.log(generateTreeLines(nest) + "[" + clc.bgMagenta.white.bold("Usage") + "]", msg);
-};
+const specPath = process.argv[3];
 
 const validTargets = [
 	'c_libcurl',
@@ -91,16 +73,77 @@ let targets = [
 ];
 
 /**
+ * Generate a nesting indicator with branch seperations of depth specified by nest
+ * 
+ * @param {number} nest 
+ * @returns {string}
+ */
+function generateTreeLines(nest) {
+	return nest > 0 ? "|" + " |".repeat(Math.max(0, nest - 1)) + "-->" : "";
+}
+
+/**
+ * Log a message in error format with nesting
+ * 
+ * @param {string} msg 
+ * @param {number} nest 
+ */
+function error(msg, nest=0) {
+	console.log(generateTreeLines(nest) + "[" + clc.bgRed.white.bold("Error!") + "]", msg);
+}
+
+/**
+ * Log a message in warning format with nesting
+ *
+ * @param {string} msg
+ * @param {number} nest
+ */
+function warning(msg, nest=0) {
+	console.log(generateTreeLines(nest) + "[" + clc.bgYellow.white.bold("Warning") + "]", msg);
+}
+
+/**
+ * Log a message in info format with nesting
+ *
+ * @param {string} msg
+ * @param {number} nest
+ */
+function progress(msg, nest=0) {
+	console.log(generateTreeLines(nest) + "[" + clc.bgBlue.white.bold("Info") + "]", msg);
+}
+
+/**
+ * Log a message in completed format with nesting
+ *
+ * @param {string} msg
+ * @param {number} nest
+ */
+function complete(msg, nest=0) {
+	console.log(generateTreeLines(nest) + "[" + clc.bgGreen.white.bold("Completed") + "]", msg);
+}
+
+/**
+ * Log a message in usage format with nesting
+ *
+ * @param {string} msg
+ * @param {number} nest
+ */
+function usage(msg, nest=0) {
+	console.log(generateTreeLines(nest) + "[" + clc.bgMagenta.white.bold("Usage") + "]", msg);
+}
+
+/**
  * Sends a message if argv parameter isVerbose is set
  *
  * @param {string} message Message to send
  * @param {number} nesting Message nesting depth
  * @param {function} message_method Type of message to send
  */
-function messageIfVerbose(message, nesting, message_method = progress) {
+function messageIfVerbose(message, nesting, message_method=progress) {
 	if (isVerbose)
 		message_method(message, nesting);
 }
+
 
 /**
  * Adds specified targets to schema, returning ammended schema
@@ -112,7 +155,7 @@ function enrichSchema(schema) {
 	for (const path in schema.paths) {
 		for (const method in schema.paths[path]) {
 			const generatedCode = OpenAPISnippet.getEndpointSnippets(schema, path, method, targets);
-			messageIfVerbose("Checking existance of 'x-code-samples' field in " + path + " path...", progress);
+			messageIfVerbose("Checking existance of 'x-code-samples' field in " + path + " path...");
 			if (!schema.paths[path][method]["x-code-samples"]) {
 				messageIfVerbose("Added 'x-code-samples' field.", 1, complete);
 				schema.paths[path][method]["x-code-samples"] = [];
@@ -121,7 +164,7 @@ function enrichSchema(schema) {
 			}
 			for (const snippetIdx in generatedCode.snippets) {
 				const snippet = generatedCode.snippets[snippetIdx];
-				messageIfVerbose("Checking existance of '" + snippet.title + "' field...", 1, progress);
+				messageIfVerbose("Checking existance of '" + snippet.title + "' field...", 1);
 				if (!schema.paths[path][method]["x-code-samples"][snippetIdx]) {
 					messageIfVerbose("Added '" + snippet.title + "' field.", 2, complete);
 					schema.paths[path][method]["x-code-samples"][snippetIdx] = { "lang": snippet.title, "source": snippet.content };
@@ -135,103 +178,173 @@ function enrichSchema(schema) {
 	return schema;
 }
 
-// Check the OpenAPI spec is given
-if (process.argv.length < 3) {
-	error("Please pass the OpenAPI JSON schema as argument.");
-	usage("npm run add-examples <swagger/openapi specification> <output destination> {[targets]} {options}\n");
-	process.exit(1);
+/**
+ * Verify the integrity of CLI passed paramters against valid values
+ * 
+ * - Check a raw specification file name was passed
+ * - Check a final specification file name was passed
+ * - Set the verbosity flag if '-v' or '--verbose' is passed
+ */
+function checkParameters() {
+	// Check the OpenAPI spec is given
+	if (process.argv.length < 3) {
+		error("Please pass the OpenAPI JSON raw specification file name as argument.");
+		usage("npm run add-examples <swagger/openapi specification> <output destination> {[targets]} {options}\n");
+		process.exit(1);
+	}
+
+	// Check an output file/destination is specified
+	if (process.argv.length < 4) {
+		error("Please specify an output file.");
+		usage("npm run add-examples <swagger/openapi specification> <output destination> {[targets]} {options}\n");
+		process.exit(1);
+	}
+
+	if (process.argv[process.argv.length - 1] === "-v" || process.argv[process.argv.length - 1] === "--verbose") {
+		progress("Switching to verbose logging");
+		isVerbose = true;
+	}
 }
 
-// Check an output file/destination is specified
-if (process.argv.length < 4) {
-	error("Please specify an output file.");
-	usage("npm run add-examples <swagger/openapi specification> <output destination> {[targets]} {options}\n");
-	process.exit(1);
-}
-
-if (process.argv[process.argv.length - 1] === "-v" || process.argv[process.argv.length - 1] === "--verbose") {
-	progress("Switching to verbose logging");
-	isVerbose = true;
-}
-
-// Configure custom targets if specified
-if (process.argv.length > 4) {
-	progress("Validating targets...");
-	if (process.argv[4] === "default")
-		complete("Default specified, skipping.", 1);
-	else {
-		let targetsToCheck = process.argv.slice(4);
-		for (const target of targetsToCheck) {
-			if (!targets.includes(target)) {
-				error("Target \'" + target + "\' is not valid");
-				process.exit(1);
+/**
+ * Check whether the passed client code snippet languages are valid
+ * 
+ * - Set targets to default list if 'default' is passed
+ * - Assert each passed target is a valid language (exiting if not)
+ */
+function configureTargets() {
+	// Configure custom targets if specified
+	if (process.argv.length > 4) {
+		progress("Validating targets...");
+		if (process.argv[4] === "default")
+			complete("Default specified, skipping.", 1);
+		else {
+			const targetsToCheck = process.argv.slice(4);
+			for (const target of targetsToCheck) {
+				if (!validTargets.includes(target)) {
+					error("Target '" + target + "' is not valid");
+					process.exit(1);
+				}
 			}
+			targets = targetsToCheck;
+			complete("All specified targets are valid", 1);
 		}
-		targets = targetsToCheck;
-		complete("All specified targets are valid", 1);
-	}
-} else {
-	warning("No targets specified, defaulting to internally specified:" + targets.map(v => ' ' + v));
-}
-
-// Check output file is in JSON format
-if (process.argv[3].indexOf('json') == -1) {
-	error("Only JSON format is supported for output.");
-	usage("npm run add-examples <swagger/openapi specification> <output destination> {[targets]} {options}\n");
-	process.exit(1);
-}
-
-const specPath = process.argv[3];
-
-// If specification.json exists, remove it, otherwise continue
-try {
-	progress("Checking if specification.json exists");
-	if (fs.existsSync("./" + specPath)) {
-		progress(process.argv[3] + " exists, removing...", 1);
-		fs.unlinkSync("./" + specPath);
-		complete(process.argv[3] + " removed", 1);
 	} else {
-		complete(process.argv[3] + " does not exist, continuing", 1);
+		warning("No targets specified, defaulting to internally specified:" + targets.map(v => ' ' + v));
 	}
-} catch (err) {
-	error(err);
-	process.exit(1);
 }
 
-// Try to interpret as YAML first, based on file extension, alternatively parsing native JSON
-if (process.argv[2].indexOf('yml') !== -1 || process.argv[2].indexOf('yaml') !== -1) {
+/**
+ * Check the output file type is JSON
+ * 
+ * @param {string} final_spec_file Final specification file name (Must be JSON)
+ */
+function checkOutputFileType(final_spec_file) {
+	if (!final_spec_file.endsWith('json')) {
+		error("Only JSON format is supported for output.");
+		usage("npm run add-examples <swagger/openapi specification> <output destination> {[targets]} {options}\n");
+		process.exit(1);
+	}
+}
+
+/**
+ * Remove any existing final specification files
+ * 
+ * @param {string} final_spec_file Final specification file name (Must be JSON)
+ */
+function removeExistingFinalSpec(final_spec_file) {
 	try {
-		progress("Converting YAML file...");
-		let schema = yaml.safeLoad(fs.readFileSync(process.argv[2], 'utf8'));
-		complete("Converted YAML file", 1);
+		progress("Checking if specification.json exists");
+		if (fs.existsSync("./" + specPath)) {
+			progress(final_spec_file + " exists, removing...", 1);
+			fs.unlinkSync("./" + specPath);
+			complete(final_spec_file + " removed", 1);
+		} else {
+			complete(final_spec_file + " does not exist, continuing", 1);
+		}
+	} catch (err) {
+		error(err);
+		process.exit(1);
+	}
+}
+
+/**
+ * Process a YML/YAML raw specification and enrich with client code examples, exported to a given output file
+ * 
+ * @param {string} raw_spec_file Raw specification file name
+ * @param {string} final_spec_file Final specification file name (Must be JSON)
+ */
+function processYAMLSpecification(raw_spec_file, final_spec_file) {
+	progress("Converting YAML file...");
+	let schema = yaml.safeLoad(fs.readFileSync(raw_spec_file, 'utf8'));
+	complete("Converted YAML file", 1);
+	progress("Adding samples for " + String(targets).replace(/,/g, ", ") + "...", 1);
+	schema = enrichSchema(schema);
+	fs.writeFile(final_spec_file, JSON.stringify(schema), function (err) {
+		if (err) throw err;
+		complete("Added samples and exported to: " + final_spec_file, 2);
+	});
+}
+
+/**
+ * Process a JSON raw specification and enrich with client code examples, exported to a given output file
+ * 
+ * @param {string} raw_spec_file Raw specification file name
+ * @param {string} final_spec_file Final specification file name (Must be JSON)
+ */
+function processJSONSpecification(raw_spec_file, final_spec_file) {
+	progress("Parsing JSON file...");
+	fs.readFile(raw_spec_file, (err, data) => {
+		if (err) throw err;
+		let schema = JSON.parse(data);
+		complete("Parsed JSON file", 1);
 		progress("Adding samples for " + String(targets).replace(/,/g, ", ") + "...", 1);
 		schema = enrichSchema(schema);
-		fs.writeFile(process.argv[3], JSON.stringify(schema), function (err) {
+		fs.writeFile(final_spec_file, JSON.stringify(schema), function (err) {
 			if (err) throw err;
-			complete("Added samples and exported to: " + process.argv[3], 2);
+			complete("Added samples and exported to: " + final_spec_file, 2);
 		});
-	} catch (e) {
-		error(e);
-		process.exit(1);
-	}
-} else {
-	try {
-		progress("Parsing JSON file...");
-		fs.readFile(process.argv[2], (err, data) => {
-			if (err) throw err;
-			let schema = JSON.parse(data);
-			schema = enrichSchema(schema);
-			complete("Parsed JSON file", 1);
-			progress("Adding samples for " + String(targets).replace(/,/g, ", ") + "...", 1);
-			fs.writeFile(process.argv[3], JSON.stringify(schema), function (err) {
-				if (err) throw err;
-				complete("Added samples and exported to: " + process.argv[3], 2);
-			});
-		});
-	} catch (e) {
-		error(e);
-		process.exit(1);
+	});
+}
+
+/**
+ * Process the raw specification by enriching with client code samples and then write to
+ * final specification file. First tries to parse a YML/YAML file and if the file type
+ * does not match, then tries JSON.
+ * 
+ * @param {string} raw_spec_file Raw specification file name
+ * @param {string} final_spec_file Final specification file name (Must be JSON)
+ */
+function processSpecificationToFile(raw_spec_file, final_spec_file) {
+	// Try to interpret as YAML first, based on file extension, alternatively parsing native JSON
+	if (raw_spec_file.endsWith('yml') || raw_spec_file.endsWith('yaml')) {
+		try {
+			processYAMLSpecification(raw_spec_file, final_spec_file);
+		} catch (e) {
+			error(e);
+			process.exit(1);
+		}
+	} else {
+		try {
+			processJSONSpecification(raw_spec_file, final_spec_file);
+		} catch (e) {
+			error(e);
+			process.exit(1);
+		}
 	}
 }
 
+/**
+ * Call order for processing a specification
+ */
+function processInputs() {
+	let raw_spec_file = process.argv[2];
+	let final_spec_file = process.argv[3];
+	checkParameters();
+	configureTargets();
+	checkOutputFileType(final_spec_file);
+	removeExistingFinalSpec(final_spec_file);
+	processSpecificationToFile(raw_spec_file, final_spec_file);
+}
 
+processInputs();
