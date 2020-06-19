@@ -262,6 +262,7 @@ function removeExistingFinalSpec(final_spec_file) {
 function addSamplesExport(schema, final_spec_file) {
 	logMessage("Adding samples for " + String(targets).replace(/,/g, ", ") + "...", 1);
 	schema = enrichSchema(schema);
+	console.log(final_spec_file);
 	fs.writeFile(final_spec_file, JSON.stringify(schema), function (err) {
 		if (err) throw err;
 		logMessage("Added samples and exported to: " + final_spec_file, 2, MessageType.Complete);
@@ -293,7 +294,7 @@ function processJSONSpecification(raw_spec_file, final_spec_file) {
 		if (err) throw err;
 		let schema = JSON.parse(data);
 		logMessage("Parsed JSON file", 1, MessageType.Complete);
-		addSamplesExport(schema, targets, final_spec_file);
+		addSamplesExport(schema, final_spec_file);
 	});
 }
 
