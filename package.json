@@ -5,21 +5,23 @@
   "main": "parse.js",
   "scripts": {
     "test": "test",
-    "add-examples": "rm -rf $FINAL_SPEC_FILE_NAME && node parse.js $RAW_SPEC_FILE_NAME $FINAL_SPEC_FILE_NAME $CODE_TARGETS -v",
+    "add-examples": "rm -rf $FINAL_SPEC_FILE_NAME && node parse.js $RAW_SPEC_FILE_NAME $FINAL_SPEC_FILE_NAME.[contenthash].json $CODE_TARGETS -v",
     "verify-raw-spec": "swagger-cli validate $RAW_SPEC_FILE_NAME",
-    "verify-final-spec": "npx swagger-cli validate $FINAL_SPEC_FILE_NAME",
-    "get-spec": "rm -rf $RAW_SPEC_FILE_NAME && curl $SPECURL > $RAW_SPEC_FILE_NAME",
-    "remove-specs": "rm -rf $RAW_SPEC_FILE_NAME && rm -rf $FINAL_SPEC_FILE_NAME",
-    "process-spec": "npm run get-spec && npm run verify-raw-spec && npm run add-examples && npm run verify-final-spec"
+    "verify-final-spec": "npx swagger-cli validate $FINAL_SPEC_FILE_NAME.*.json",
+    "get-spec": "rm -rf $RAW_SPEC_FILE_NAME.[contenthash].json && curl $SPECURL > $RAW_SPEC_FILE_NAME",
+    "remove-specs": "rm -rf $RAW_SPEC_FILE_NAME && rm -rf $FINAL_SPEC_FILE_NAME.*.json",
+    "process-spec": "npm run remove-specs && npm run get-spec && npm run verify-raw-spec && npm run add-examples && npm run verify-final-spec"
   },
   "author": "Base: Andrzej WP, Expansion + running scripts: Jack Kilrain",
   "license": "MIT",
   "dependencies": {
     "@openapitools/openapi-generator-cli": "^1.0.13-4.3.1",
+    "@types/object-hash": "^1.3.3",
     "cli-color": "^2.0.0",
     "js-yaml": "^3.13.1",
     "mkdirp": "^0.5.0",
     "mkdirp-promise": "^1.1.0",
+    "object-hash": "^2.0.3",
     "openapi-snippet": "^0.8.1",
     "swagger-cli": "^3.0.1"
   },

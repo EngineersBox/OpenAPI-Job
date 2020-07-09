@@ -4,40 +4,43 @@ OpenAPI specification retrieval, verification and push.
 ---
 ## Valid language targets
 Valid languages to specify that client code examples are generated for, are:
-* c_libcurl
-* csharp_restsharp
-* go_native
-* java_okhttp
-* java_unirest
-* javascript_jquery
-* javascript_xhr
-* node_native
-* node_request
-* node_unirest
-* objc_nsurlsession
-* ocaml_cohttp
-* php_curl
-* php_http1
-* php_http2
-* python_python3
-* python_requests
-* ruby_native
-* shell_curl
-* shell_httpie
-* shell_wget
-* swift_nsurlsession
-* default
+
+    c_libcurl
+    csharp_restsharp
+    go_native
+    java_okhttp
+    java_unirest
+    javascript_jquery
+    javascript_xhr
+    node_native
+    node_request
+    node_unirest
+    objc_nsurlsession
+    ocaml_cohttp
+    php_curl
+    php_http1
+    php_http2
+    python_python3
+    python_requests
+    ruby_native
+    shell_curl
+    shell_httpie
+    shell_wget
+    swift_nsurlsession
+    default
 
 If `default` is specified as the language then the following list will be used:
-* php_curl,
-* javascript_xhr
-* java_okhttp
-* python_requests
-* python_python3
-* go_native
-* shell_curl
+
+    php_curl
+    javascript_xhr
+    java_okhttp
+    python_requests
+    python_python3
+    go_native
+    shell_curl
 ---
 ## Environment Variables
+
 | Variable             | Value                                                                                                                                    |
 |----------------------|------------------------------------------------------------------------------------------------------------------------------------------|
 | RAW_SPEC_FILE_NAME   | JSON or YAML file to store the raw specification data from SPECURL e.g: "raw-spec.json"                                                  |
@@ -54,6 +57,7 @@ Basic command format:
 ```
 
 Below are all of the commands listed out with formatting:
+
 | Command           | npm form                                                                                                          | Bash form                                                                                                                                                                                     |
 |-------------------|-------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | add-examples      | ``` FINAL_SPEC_FILE_NAME="..." RAW_SPEC_FILE_NAME="..." CODE_TARGETS="..." npm run add-examples ```               | ``` FINALSPEC_FILE_NAME="..." RAW_SPEC_FILE_NAME="..." CODE_TARGETS="..." rm -rf $FINAL_SPEC_FILE_NAME && node parse.js $RAW_SPEC_FILE_NAME $FINAL_SPEC_FILE_NAME $CODE_TARGETS -v ```        |
@@ -67,7 +71,7 @@ Below are all of the commands listed out with formatting:
 
 ```bash
 RAW_SPEC_FILE_NAME="raw-spec.json"
-FINAL_SPEC_FILE_NAME="specification.json"
+FINAL_SPEC_FILE_NAME="specification"
 CODE_TARGETS="default"
 SPECURL="https://raw.githubusercontent.com/networknt/model-config/master/rest/openapi/petstore/1.0.0/openapi.json"
 npm run process-spec

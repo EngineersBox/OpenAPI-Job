@@ -32,6 +32,7 @@ const fs = require('fs');
 const OpenAPISnippet = require('openapi-snippet');
 const yaml = require('js-yaml');
 const clc = require('cli-color');
+const hash = require('object-hash');
 
 let isVerbose = false;
 const specPath = process.argv[3];
@@ -79,7 +80,7 @@ class PropertyError extends Error {
 		this.name = "PropertyError";
 		this.property = property;
 	}
-
+	
 }
 
 /**
@@ -262,8 +263,8 @@ function removeExistingFinalSpec(final_spec_file) {
 function addSamplesExport(schema, final_spec_file) {
 	logMessage("Adding samples for " + String(targets).replace(/,/g, ", ") + "...", 1);
 	schema = enrichSchema(schema);
-	console.log(final_spec_file);
-	fs.writeFile(final_spec_file, JSON.stringify(schema), function (err) {
+	let filename_with_hash = final_spec_file.replace("[contenthash]", hash(schema));
+	fs.writeFile(filename_with_hash, JSON.stringify(schema), function (err) {
 		if (err) throw err;
 		logMessage("Added samples and exported to: " + final_spec_file, 2, MessageType.Complete);
 	});
