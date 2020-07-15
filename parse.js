@@ -205,7 +205,7 @@ function configureTargets() {
 		if (process.argv[4] === "default")
 			logMessage("Default specified, skipping.", 1, MessageType.Complete);
 		else {
-			const targetsToCheck = process.argv.slice(4);
+			const targetsToCheck = process.argv.slice(4, isVerbose ? process.argv.length - 1 : process.argv.length);
 			for (const target of targetsToCheck) {
 				if (!validTargets.includes(target)) {
 					logMessage("Target '" + target + "' is not valid", 0, MessageType.Erroneous);
